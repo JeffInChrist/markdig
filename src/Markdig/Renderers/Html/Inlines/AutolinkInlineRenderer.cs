@@ -21,18 +21,26 @@ namespace Markdig.Renderers.Html.Inlines
         {
             get
             {
-                return Rel.Contains("nofollow");
+                return Rel is not null && Rel.Contains("nofollow");
             }
             set
             {
-                string rel = "nofollow";
-                if (value && !Rel.Contains(rel))
+                const string NoFollow = "nofollow";
+
+                if (value)
                 {
-                    Rel = string.IsNullOrEmpty(Rel) ? rel : Rel + $" {rel}";
+                    if (string.IsNullOrEmpty(Rel))
+                    {
+                        Rel = NoFollow;
+                    }
+                    else if (!Rel!.Contains(NoFollow))
+                    {
+                        Rel += $" {NoFollow}";
+                    }
                 }
-                else if(!value && Rel.Contains(rel))
+                else
                 {
-                    Rel = Rel.Replace(rel, string.Empty);
+                    Rel = Rel?.Replace(NoFollow, string.Empty);
                 }
             }
         }
@@ -40,7 +48,7 @@ namespace Markdig.Renderers.Html.Inlines
         /// <summary>
         /// Gets or sets the literal string in property rel for links
         /// </summary>
-        public string Rel { get; set; }
+        public string? Rel { get; set; }
 
         protected override void Write(HtmlRenderer renderer, AutolinkInline obj)
         {
@@ -60,7 +68,7 @@ namespace Markdig.Renderers.Html.Inlines
                     renderer.Write($" rel=\"{Rel}\"");
                 }
 
-                renderer.Write(">");
+                renderer.Write('>');
             }
 
             renderer.WriteEscape(obj.Url);

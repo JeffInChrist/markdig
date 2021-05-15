@@ -221,9 +221,9 @@ namespace Markdig.Helpers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNewLine(this char c)
+        public static bool IsNewLineOrLineFeed(this char c)
         {
-            return c == '\n';
+            return c == '\n' || c == '\r';
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -354,22 +354,6 @@ namespace Markdig.Helpers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool IsInInclusiveRange(int value, uint min, uint max)
             => ((uint)value - min) <= (max - min);
-
-        public static IEnumerable<int> ToUtf32(StringSlice text)
-        {
-            for (int i = text.Start; i <= text.End; i++)
-            {
-                if (IsHighSurrogate(text[i]) && i < text.End && IsLowSurrogate(text[i + 1]))
-                {
-                    Debug.Assert(char.IsSurrogatePair(text[i], text[i + 1]));
-                    yield return char.ConvertToUtf32(text[i], text[i + 1]);
-                }
-                else
-                {
-                    yield return text[i];
-                }
-            }
-        }
 
         public static bool IsRightToLeft(int c)
         {

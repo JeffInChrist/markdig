@@ -39,7 +39,7 @@ using Markdig.Extensions.ReferralLinks;
 namespace Markdig
 {
     /// <summary>
-    /// Provides extension methods for <see cref="MarkdownPipeline"/> to enable several Markdown extensions.
+    /// Provides extension methods for <see cref="MarkdownPipelineBuilder"/> to enable several Markdown extensions.
     /// </summary>
     public static class MarkdownExtensions
     {
@@ -101,7 +101,7 @@ namespace Markdig
         /// <param name="pipeline">The pipeline.</param>
         /// <param name="options">The options.</param>
         /// <returns>The modified pipeline</returns>
-        public static MarkdownPipelineBuilder UseAutoLinks(this MarkdownPipelineBuilder pipeline, AutoLinkOptions options = null)
+        public static MarkdownPipelineBuilder UseAutoLinks(this MarkdownPipelineBuilder pipeline, AutoLinkOptions? options = null)
         {
             pipeline.Extensions.ReplaceOrAdd<AutoLinkExtension>(new AutoLinkExtension(options));
             return pipeline;
@@ -136,7 +136,7 @@ namespace Markdig
         /// <param name="defaultTag">The default tag to use to match the self pipeline configuration. By default, <see cref="SelfPipelineExtension.DefaultTag"/>, meaning that the HTML tag will be &lt;--markdig:extensions--&gt;</param>
         /// <param name="defaultExtensions">The default extensions to configure if no pipeline setup was found from the Markdown document</param>
         /// <returns>The modified pipeline</returns>
-        public static MarkdownPipelineBuilder UseSelfPipeline(this MarkdownPipelineBuilder pipeline, string defaultTag = SelfPipelineExtension.DefaultTag, string defaultExtensions = null)
+        public static MarkdownPipelineBuilder UseSelfPipeline(this MarkdownPipelineBuilder pipeline, string defaultTag = SelfPipelineExtension.DefaultTag, string? defaultExtensions = null)
         {
             if (pipeline.Extensions.Count != 0)
             {
@@ -210,7 +210,7 @@ namespace Markdig
         /// <returns>
         /// The modified pipeline
         /// </returns>
-        public static MarkdownPipelineBuilder UseMediaLinks(this MarkdownPipelineBuilder pipeline, MediaOptions options = null)
+        public static MarkdownPipelineBuilder UseMediaLinks(this MarkdownPipelineBuilder pipeline, MediaOptions? options = null)
         {
             if (!pipeline.Extensions.Contains<MediaLinkExtension>())
             {
@@ -244,7 +244,7 @@ namespace Markdig
         /// <returns>
         /// The modified pipeline
         /// </returns>
-        public static MarkdownPipelineBuilder UseSmartyPants(this MarkdownPipelineBuilder pipeline, SmartyPantOptions options = null)
+        public static MarkdownPipelineBuilder UseSmartyPants(this MarkdownPipelineBuilder pipeline, SmartyPantOptions? options = null)
         {
             if (!pipeline.Extensions.Contains<SmartyPantsExtension>())
             {
@@ -316,7 +316,7 @@ namespace Markdig
         /// <returns>
         /// The modified pipeline
         /// </returns>
-        public static MarkdownPipelineBuilder UsePipeTables(this MarkdownPipelineBuilder pipeline, PipeTableOptions options = null)
+        public static MarkdownPipelineBuilder UsePipeTables(this MarkdownPipelineBuilder pipeline, PipeTableOptions? options = null)
         {
             if (!pipeline.Extensions.Contains<PipeTableExtension>())
             {
@@ -465,20 +465,19 @@ namespace Markdig
 
         public static MarkdownPipelineBuilder UseReferralLinks(this MarkdownPipelineBuilder pipeline, params string[] rels)
         {
-            if (!pipeline.Extensions.Contains<ReferralLinksExtension>())
+            if (pipeline.Extensions.TryFind(out ReferralLinksExtension? referralLinksExtension))
             {
-                pipeline.Extensions.Add(new ReferralLinksExtension(rels));
-            }
-            else
-            {
-                var referralLinksExtension = pipeline.Extensions.Find<ReferralLinksExtension>();
-                foreach(string rel in rels)
+                foreach (string rel in rels)
                 {
                     if (!referralLinksExtension.Rels.Contains(rel))
                     {
                         referralLinksExtension.Rels.Add(rel);
                     }
                 }
+            }
+            else
+            {
+                pipeline.Extensions.Add(new ReferralLinksExtension(rels));
             }
             return pipeline;
         }
@@ -522,7 +521,7 @@ namespace Markdig
                 pipeline.BlockParsers.Remove(parser);
             }
 
-            var inlineParser = pipeline.InlineParsers.Find<AutolineInlineParser>();
+            var inlineParser = pipeline.InlineParsers.Find<AutolinkInlineParser>();
             if (inlineParser != null)
             {
                 inlineParser.EnableHtmlParsing = false;
@@ -536,9 +535,9 @@ namespace Markdig
         /// <param name="pipeline">The pipeline (e.g: advanced for <see cref="UseAdvancedExtensions"/>, pipetables+gridtables for <see cref="UsePipeTables"/> and <see cref="UseGridTables"/></param>
         /// <param name="extensions">The extensions to activate as a string</param>
         /// <returns>The modified pipeline</returns>
-        public static MarkdownPipelineBuilder Configure(this MarkdownPipelineBuilder pipeline, string extensions)
+        public static MarkdownPipelineBuilder Configure(this MarkdownPipelineBuilder pipeline, string? extensions)
         {
-            if (extensions == null)
+            if (extensions is null)
             {
                 return pipeline;
             }
@@ -674,6 +673,21 @@ namespace Markdig
             if (pipeline.BlockParsers.TryFind<ParagraphBlockParser>(out var parser))
             {
                 parser.ParseSetexHeadings = false;
+            }
+            return pipeline;
+        }
+
+        /// <summary>
+        /// Enables parsing and tracking of trivia characters
+        /// </summary>
+        /// <param name="pipeline">The pipeline.</param>
+        /// <returns>he modified pipeline</returns>
+        public static MarkdownPipelineBuilder EnableTrackTrivia(this MarkdownPipelineBuilder pipeline)
+        {
+            pipeline.TrackTrivia = true;
+            if (pipeline.BlockParsers.TryFind<FencedCodeBlockParser>(out var parser))
+            {
+                parser.InfoParser = FencedCodeBlockParser.RoundtripInfoParser;
             }
             return pipeline;
         }

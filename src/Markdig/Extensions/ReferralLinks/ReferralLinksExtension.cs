@@ -2,12 +2,11 @@
 // This file is licensed under the BSD-Clause 2 license.
 // See the license.txt file in the project root for more information.
 
-using Markdig.Renderers;
-using Markdig.Renderers.Html.Inlines;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using Markdig.Renderers;
+using Markdig.Renderers.Html.Inlines;
 
 namespace Markdig.Extensions.ReferralLinks
 {
@@ -15,7 +14,7 @@ namespace Markdig.Extensions.ReferralLinks
     {
         public ReferralLinksExtension(string[] rels)
         {
-            Rels = rels?.ToList();
+            Rels = rels?.ToList() ?? throw new ArgumentNullException(nameof(rels));
         }
 
         public List<string> Rels { get; }
@@ -26,8 +25,7 @@ namespace Markdig.Extensions.ReferralLinks
 
         public void Setup(MarkdownPipeline pipeline, IMarkdownRenderer renderer)
         {
-            string relString = Rels == null? null :
-                string.Join(" ", Rels.Where(r => !string.IsNullOrEmpty(r)));
+            string relString = string.Join(" ", Rels.Where(r => !string.IsNullOrEmpty(r)));
 
             var linkRenderer = renderer.ObjectRenderers.Find<LinkInlineRenderer>();
             if (linkRenderer != null)
